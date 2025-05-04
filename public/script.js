@@ -1,46 +1,48 @@
 let video;
 let scaler = 10;
 let preFrame;
-let motionSpeed;let video;
-let scaler = 20; // Less pixel resolution = faster
-let preFrame;
 let motionSpeed;
 
-let noise, sawOsc, tremor;
-let audioStarted = false;
+// Sound
+let noise, sawOsc;
+let tremor;
 
 function setup() {
-  createCanvas(windowWidth, windowHeight);
+  createCanvas(640, 480);
   pixelDensity(1);
 
   video = createCapture(VIDEO);
   video.size(width / scaler, height / scaler);
   video.hide();
   preFrame = createImage(video.width, video.height);
+
+  // Noise oscillator
+  noise = new p5.Noise('white');
+  noise.amp(0);
+  noise.start();
+
+  // Sawtooth oscillator (cybernetic drone)
+  sawOsc = new p5.Oscillator('sawtooth');
+  sawOsc.freq(200);
+  sawOsc.amp(0);
+  sawOsc.start();
+
+  // Tremor oscillator modulates amplitude slightly
+  tremor = new p5.Oscillator('sine');
+  tremor.freq(20); // Fast tremble
+  tremor.amp(0);
+  tremor.start();
 }
 
 function draw() {
-  if (!audioStarted) {
-    background(0);
-    fill(255);
-    textAlign(CENTER, CENTER);
-    textSize(24);
-    text("Click anywhere to start audio", width / 2, height / 2);
-    return;
-  }
-
-  // Only do expensive pixel reads every second frame
-  if (frameCount % 2 === 0) {
-    video.loadPixels();
-    preFrame.loadPixels();
-  }
+  video.loadPixels();
+  preFrame.loadPixels();
 
   let totalMotion = 0;
 
   for (let y = 0; y < video.height; y++) {
     for (let x = 0; x < video.width; x++) {
       let index = (x + y * video.width) * 4;
-
       let pr = preFrame.pixels[index + 0];
       let pg = preFrame.pixels[index + 1];
       let pb = preFrame.pixels[index + 2];
@@ -86,19 +88,22 @@ function draw() {
 
   preFrame.copy(video, 0, 0, video.width, video.height, 0, 0, video.width, video.height);
 
-  // Sonic chaos reacts to motion
+  // More intense sonic chaos
   if (motionSpeed > 10) {
     let normSpeed = constrain(map(motionSpeed, 10, 50, 0, 1), 0, 1);
 
+    // Noise volume increases exponentially with speed
     let noiseAmp = pow(normSpeed, 2) * 0.5;
     noise.amp(noiseAmp, 0.05);
 
+    // Saw oscillator gets louder and higher-pitched
     let sawAmp = pow(normSpeed, 1.5) * 0.3;
-    let sawFreq = 200 + normSpeed * 800;
+    let sawFreq = 200 + normSpeed * 800; // From 200Hz to 1000Hz
     sawOsc.amp(sawAmp, 0.05);
     sawOsc.freq(sawFreq);
 
-    let tremorFreq = map(normSpeed, 0, 1, 5, 40);
+    // Optional: tremor modulates amplitude
+    let tremorFreq = map(normSpeed, 0, 1, 5, 40); // Faster tremble at high speed
     tremor.freq(tremorFreq);
     tremor.amp(0.1 * normSpeed);
   } else {
@@ -108,26 +113,3 @@ function draw() {
   }
 }
 
-function mousePressed() {
-  if (!audioStarted) {
-    userStartAudio();
-
-    noise = new p5.Noise('white');
-    noise.start();
-    noise.amp(0);
-
-    sawOsc = new p5.Oscillator('sawtooth');
-    sawOsc.start();
-    sawOsc.amp(0);
-
-    tremor = new p5.Oscillator('sine');
-    tremor.start();
-    tremor.amp(0);
-
-    audioStarted = true;
-  }
-}
-
-function windowResized() {
-  resizeCanvas(windowWidth, windowHeight);
-}
