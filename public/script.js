@@ -1,6 +1,9 @@
 let video;
 let scaler = 10;
 let preFrame;
+let motionSpeed;let video;
+let scaler = 20; // Less pixel resolution = faster
+let preFrame;
 let motionSpeed;
 
 let noise, sawOsc, tremor;
@@ -26,8 +29,11 @@ function draw() {
     return;
   }
 
-  video.loadPixels();
-  preFrame.loadPixels();
+  // Only do expensive pixel reads every second frame
+  if (frameCount % 2 === 0) {
+    video.loadPixels();
+    preFrame.loadPixels();
+  }
 
   let totalMotion = 0;
 
@@ -80,7 +86,7 @@ function draw() {
 
   preFrame.copy(video, 0, 0, video.width, video.height, 0, 0, video.width, video.height);
 
-  // Sonic chaos responds to motion intensity
+  // Sonic chaos reacts to motion
   if (motionSpeed > 10) {
     let normSpeed = constrain(map(motionSpeed, 10, 50, 0, 1), 0, 1);
 
@@ -106,7 +112,6 @@ function mousePressed() {
   if (!audioStarted) {
     userStartAudio();
 
-    // Initialize sound components after user interaction
     noise = new p5.Noise('white');
     noise.start();
     noise.amp(0);
@@ -123,7 +128,6 @@ function mousePressed() {
   }
 }
 
-// Keeps canvas full screen if resized
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
 }
