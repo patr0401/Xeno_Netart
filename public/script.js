@@ -185,3 +185,4 @@ function drawRecursiveGlow(x, y, s, depth) {
   ellipse(x, y, s);
   drawRecursiveGlow(x + random(-s / 2, s / 2), y + random(-s / 2, s / 2), s * 0.8, depth - 1);
 }
+//This net art was inspired from Rosa Menkman's "A Vernacular of File Formats" and this tutorial https://www.youtube.com/watch?v=a_6ggdvsIYE&t=1380s
